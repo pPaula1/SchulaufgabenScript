@@ -1,0 +1,49 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{float}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% A simple checkbox
+\newcommand{\checkbox}{\(\square\)}
+
+% A line field
+\newcommand{\linefield}[1]{\rule{#1}{0.4pt}}
+
+% Task heading
+\newcommand{\tasktitle}[2]{\vspace{6pt}\textbf{#1}\hfill /#2\par\vspace{4pt}}
+
+\usepackage{amssymb}
+\providecommand{\checkbox}{$\square$}
+
+\begin{document}
+
+\begin{tabular}{p{0.22\textwidth} p{0.76\textwidth}}
+  \includegraphics[width=\linewidth]{C:/Users/TKast/OneDrive/Dokumente/GitHub/SchulaufgabenScript/logos/krs.png} &
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{|p{0.40\textwidth}|p{0.25\textwidth}|p{0.25\textwidth}|}
+    \hline
+    \textbf{1. Schulaufgabe} & Fach: Mathematik & Datum: 2024-11-26 \\ \hline
+    Name, Vorname: \linefield{7cm} & Klasse: \linefield{3cm} & Nr./Note: \linefield{3cm} \\ \hline
+    \multicolumn{3}{|l|}{Zeitzuschlag: \linefield{12cm}} \\ \hline
+    \multicolumn{3}{|l|}{Unterschrift Erziehungsberechtigte: \linefield{12cm}} \\ \hline
+    \multicolumn{3}{|l|}{LRSt \checkbox \quad IRSt \checkbox \quad ILSt \checkbox} \\ \hline
+  \end{tabular}
+\end{tabular}
+
+\vspace{8pt}
+
+\tasktitle{Aufgabe 1: Fehlerbilder zu linearen Funktionen}{4.5}
+Verbinde jede Zeichnung mit der dazu passenden Beschreibung des Fehlers. Fehlt eine passende Beschreibung, formuliere sie im letzten Kasten.
+
+\begin{center}\includegraphics[width=\linewidth]{C:/Users/TKast/OneDrive/Dokumente/GitHub/SchulaufgabenScript/tasks/lineare_funktionen_fehlerbilder_01/images/layout.png}\end{center}
+
+
+\par\textbf{Gesamtpunkte:} 4.5\par
+\end{document}

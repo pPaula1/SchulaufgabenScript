@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task.schema.json",
+  "title": "Task",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": ["id", "name", "points", "statement"],
+
+  "properties": {
+	"$schema": { "type": "string" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_\\-]{2,64}$",
+      "description": "Unique stable identifier."
+    },
+
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+
+    "statement": {
+      "type": "string",
+      "description": "Task text (LaTeX-safe).",
+      "minLength": 1
+    },
+
+    "points": {
+      "type": "number",
+      "minimum": 0
+    },
+
+    "grade": {
+      "oneOf": [
+        { "type": "integer", "minimum": 1, "maximum": 13 },
+        {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1, "maximum": 13 },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      ]
+    },
+
+    "subject": {
+      "type": "string"
+    },
+
+    "topic": {
+      "type": "string"
+    },
+
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 2
+    },
+
+    "estimated_minutes": {
+      "type": "number",
+      "minimum": 0
+    },
+
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "default": { "mode": "text" },
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["text", "layout"]
+        },
+        "page_break_before": {
+          "type": "boolean",
+          "default": false
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 2.0,
+          "default": 1.0
+        }
+      }
+    },
+
+    "assets": {
+      "type": "array",
+      "default": [],
+      "items": { "$ref": "#/$defs/asset" }
+    },
+
+    "parts": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "points": {
+            "type": "number",
+            "minimum": 0
+          },
+          "assets": {
+            "type": "array",
+            "default": [],
+            "items": { "$ref": "#/$defs/asset" }
+          },
+          "workspace": {
+            "type": "array",
+            "default": [],
+            "items": { "$ref": "#/$defs/workspaceBlock" }
+          }
+        }
+      }
+    },
+
+    "workspace": {
+      "type": "array",
+      "default": [{ "type": "lines", "lines": 4 }],
+      "items": { "$ref": "#/$defs/workspaceBlock" }
+    },
+
+    "answer": {
+      "type": "string"
+    },
+
+    "solution": {
+      "type": "string"
+    },
+
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "version": {
+      "type": "string",
+      "default": "1.0"
+    }
+  },
+
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": ["string", "null"],
+          "default": null
+        },
+        "width": {
+          "type": "string",
+          "default": "0.8\\linewidth"
+        },
+        "placement": {
+          "type": "string",
+          "enum": ["below_statement", "above_workspace", "inline"],
+          "default": "below_statement"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["figure", "layout"],
+          "default": "figure"
+        }
+      }
+    },
+
+    "workspaceBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["blank", "lines", "grid", "box", "coord"]
+        },
+
+        "height_cm": {
+          "type": "number",
+          "minimum": 0
+        },
+
+        "blank_text": {
+          "type": "string"
+        },
+
+        "lines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+
+        "line_height_mm": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 15,
+          "default": 7
+        },
+
+        "grid": {
+          "type": "string",
+          "enum": ["karo_5mm", "karo_1cm", "millimeter"],
+          "default": "karo_5mm"
+        },
+
+        "box_title": {
+          "type": "string"
+        },
+
+        "coord_style": {
+          "type": "string",
+          "enum": ["standard", "fine", "blank_axes"],
+          "default": "standard"
+        }
+      },
+
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "lines" } } },
+          "then": { "required": ["lines"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "blank" } } },
+          "then": { "required": ["height_cm"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "coord" } } },
+          "then": { "required": ["height_cm"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "box" } } },
+          "then": { "required": ["height_cm"] }
+        }
+      ]
+    }
+  }
+}

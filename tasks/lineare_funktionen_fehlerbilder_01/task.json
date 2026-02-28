@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/task.schema.json",
+
+  "id": "lineare_funktionen_fehlerbilder_01",
+  "name": "Fehlerbilder zu linearen Funktionen",
+
+  "grade": [9],
+  "subject": "Mathematik",
+  "topic": "Lineare Funktionen",
+  "tags": ["zuordnung", "steigung", "y-achsenabschnitt"],
+  "difficulty": 2,
+
+  "points": 4.5,
+
+  "render": {
+    "mode": "layout",
+    "page_break_before": false,
+    "scale": 1.0
+  },
+
+  "statement": "Verbinde jede Zeichnung mit der dazu passenden Beschreibung des Fehlers. Fehlt eine passende Beschreibung, formuliere sie im letzten Kasten.",
+
+  "assets": [
+    {
+      "path": "images/layout.png",
+      "role": "layout",
+      "width": "\\linewidth"
+    }
+  ],
+
+  "workspace": []
+}

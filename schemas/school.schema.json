@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "school.schema.json",
+  "title": "School Info",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": ["id", "name", "logo"],
+
+  "properties": {
+	"$schema": { "type": "string" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_\\-]{2,64}$",
+      "description": "Stable school identifier (used by exams)."
+    },
+
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "School name."
+    },
+
+    "logo": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Relative path to the school logo file."
+    },
+
+    "address": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "street": { "type": "string" },
+        "zip": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+
+    "header_fields": {
+      "type": "array",
+      "description": "Defines which input fields appear in the exam header and how they should be labeled. No layout settings.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/headerField" }
+    },
+
+    "version": {
+      "type": "string",
+      "default": "1.0"
+    }
+  },
+
+  "$defs": {
+    "headerField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "label", "kind"],
+
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_\\-]{1,32}$",
+          "description": "Machine key used by renderer (e.g. student_name, grade, note)."
+        },
+
+        "label": {
+          "type": "string",
+          "description": "Human label displayed in the header."
+        },
+
+        "kind": {
+          "type": "string",
+          "enum": ["text_line", "checkbox_group"],
+          "description": "Field type: free text line or a checkbox group."
+        },
+
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the field should always be present in exams for this school."
+        },
+
+        "options": {
+          "type": "array",
+          "description": "Only for checkbox_group: list of checkbox labels.",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "checkbox_group" } } },
+          "then": { "required": ["options"] }
+        }
+      ]
+    }
+  }
+}

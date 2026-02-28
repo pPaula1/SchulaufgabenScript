@@ -1,0 +1,22 @@
+{
+  "$schema": "../schemas/school.schema.json",
+  "id": "krs",
+  "name": "Knabenrealschule",
+  "logo": "logos/krs.png",
+
+  "header_fields": [
+    { "key": "student_name", "label": "Name, Vorname", "kind": "text_line", "required": true },
+    { "key": "class", "label": "Klasse", "kind": "text_line", "required": true },
+    { "key": "note", "label": "Nr./Note", "kind": "text_line", "required": true },
+    { "key": "time_extension", "label": "Zeitzuschlag", "kind": "text_line", "required": false },
+    { "key": "parents_signature", "label": "Unterschrift Erziehungsberechtigte", "kind": "text_line", "required": false },
+
+    {
+      "key": "lrst_irst_ilst",
+      "label": "",
+      "kind": "checkbox_group",
+      "required": false,
+      "options": ["LRSt", "IRSt", "ILSt"]
+    }
+  ]
+}

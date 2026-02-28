@@ -1,0 +1,17 @@
+{
+  "$schema": "../schemas/exam.schema.json",
+  "id": "sa1_mathe_9_2024-11-26",
+
+  "school_id": "krs",
+
+  "title": "1. Schulaufgabe",
+  "subject": "Mathematik",
+  "class": "9",
+  "date": "2024-11-26",
+
+  "tasks": [
+    { "id": "lineare_funktionen_fehlerbilder_01" }
+  ],
+
+  "version": "1.0"
+}
