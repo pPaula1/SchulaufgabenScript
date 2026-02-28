@@ -1,0 +1,58 @@
+{
+  "$schema": "../../schemas/task.schema.json",
+  "id": "geraden_g1_punktprobe_parallel_01",
+  "name": "Gerade g₁: Punktprobe, fehlende Koordinate, Nullstelle, Parallelität",
+  "statement": "Gegeben ist die Gerade $g_1: y = -\\frac{2}{3}x + 2$.",
+  "points": 8,
+  "grade": 9,
+  "subject": "Mathematik",
+  "topic": "Lineare Funktionen / Geraden",
+  "tags": ["geraden", "punktprobe", "nullstelle", "parallel", "lineare_funktion"],
+
+  "render": {
+    "mode": "text",
+    "page_break_before": false,
+    "scale": 1.0
+  },
+
+  "assets": [],
+
+  "parts": [
+    {
+      "id": "1",
+      "text": "Prüfe rechnerisch, ob der Punkt $P\\,(-1{,}5\\mid 3)$ auf der Geraden $g_1$ liegt.",
+      "points": 2,
+      "workspace": [
+        { "type": "grid", "grid": "karo_5mm", "height_cm": 4 }
+      ]
+    },
+    {
+      "id": "2",
+      "text": "Der Punkt $B\\,(x\\mid \\frac{1}{3})$ liegt auf der Geraden $g_1$. Berechne die fehlende Koordinate.",
+      "points": 2,
+      "workspace": [
+        { "type": "grid", "grid": "karo_5mm", "height_cm": 4 }
+      ]
+    },
+    {
+      "id": "3",
+      "text": "Berechne die Nullstelle der Geraden $g_1$.",
+      "points": 2,
+      "workspace": [
+        { "type": "grid", "grid": "karo_5mm", "height_cm": 4 }
+      ]
+    },
+    {
+      "id": "4",
+      "text": "Prüfe rechnerisch, ob die Gerade $g_2$ mit der Gleichung $x + \\frac{1}{3}y - 2 = 0$ parallel zur Geraden $g_1$ verläuft.",
+      "points": 2,
+      "workspace": [
+        { "type": "grid", "grid": "karo_5mm", "height_cm": 5 }
+      ]
+    }
+  ],
+
+  "workspace": [],
+
+  "version": "1.0"
+}

@@ -78,6 +78,10 @@ def latex_preamble() -> str:
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{fontspec}
+\defaultfontfeatures{Ligatures=TeX}
+\usepackage{tikz}
+\usetikzlibrary{calc}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
@@ -167,40 +171,95 @@ def render_header(project_root: Path, exam: Dict[str, Any], school: Dict[str, An
             rows.append(rf"\multicolumn{{3}}{{|l|}}{{{prefix}{boxes}}} \\ \hline")
 
     header = rf"""
-\begin{{tabular}}{{p{{0.22\textwidth}} p{{0.76\textwidth}}}}
-  \includegraphics[width=\linewidth]{{{logo_path.as_posix()}}} &
-  \renewcommand{{\arraystretch}}{{1.3}}
-  \begin{{tabular}}{{|p{{0.40\textwidth}}|p{{0.25\textwidth}}|p{{0.25\textwidth}}|}}
-    \hline
-    {("\n    ".join(rows))}
-  \end{{tabular}}
-\end{{tabular}}
+    % ===== HEADER FRAME =====
+    \noindent
+    \setlength{{\fboxsep}}{{8pt}}   % Innenabstand im Rahmen
+    \setlength{{\fboxrule}}{{0.8pt}} % Rahmenstärke
 
-\vspace{{8pt}}
-""".lstrip()
+    \fbox{{%
+      \begin{{minipage}}[t]{{\linewidth}}
+        \renewcommand{{\arraystretch}}{{1.25}}
+        \begin{{tabular}}{{@{{}}p{{0.24\linewidth}}@{{\hspace{{10pt}}}}|@{{\hspace{{10pt}}}}p{{0.70\linewidth}}@{{}}}}
+
+          % --- LEFT: LOGO BOX ---
+          \begin{{minipage}}[c][3.4cm][c]{{\linewidth}}
+            \centering
+            \includegraphics[width=0.92\linewidth]{{{logo_path.as_posix()}}}
+          \end{{minipage}}
+          &
+
+          % --- RIGHT: HEADER TABLE ---
+          \begin{{minipage}}[t]{{\linewidth}}
+            \renewcommand{{\arraystretch}}{{1.25}}
+            \begin{{tabular}}{{|p{{0.44\linewidth}}|p{{0.26\linewidth}}|p{{0.26\linewidth}}|}}
+              \hline
+              {("\n          ".join(rows))}
+            \end{{tabular}}
+          \end{{minipage}}
+
+        \end{{tabular}}
+      \end{{minipage}}
+    }}
+
+    \vspace{{10pt}}
+    """.lstrip()
     return header
 
 def render_workspace_block(block: Dict[str, Any]) -> str:
     t = block["type"]
+
     if t == "lines":
         n = int(block["lines"])
-        # simple: n lines
         lines = "\n".join([r"\linefield{16cm}\\[6pt]" for _ in range(n)])
         return lines + "\n"
+
     if t == "blank":
         h = float(block["height_cm"])
-        # blank box
         return rf"\vspace{{{h}cm}}" + "\n"
+
     if t == "box":
         h = float(block["height_cm"])
         title = tex_escape_minimal(block.get("box_title", ""))
         if title:
             return rf"\textbf{{{title}}}\par\vspace{{2pt}}\fbox{{\parbox[t][{h}cm][t]{{\linewidth}}{{}}}}\n"
         return rf"\fbox{{\parbox[t][{h}cm][t]{{\linewidth}}{{}}}}\n"
-    # grid/coord could be done with tikz later; for v1 treat like blank.
-    if t in ("grid", "coord"):
-        h = float(block.get("height_cm", 6))
-        return rf"\vspace{{{h}cm}}" + "\n"
+
+    if t == "grid":
+        h = float(block.get("height_cm", 4.0))
+        grid = block.get("grid", "karo_5mm")
+
+        # step size
+        if grid == "karo_5mm":
+            step = "5mm"
+        elif grid == "karo_1cm":
+            step = "1cm"
+        elif grid == "millimeter":
+            step = "1mm"
+        else:
+            step = "5mm"
+
+        # draw grid with border, width = \linewidth
+        return rf"""
+\begin{{center}}
+\begin{{tikzpicture}}
+  \draw[step={step}, very thin] (0,0) grid ({{\linewidth}}, {{{h}cm}});
+  \draw[line width=0.4pt] (0,0) rectangle ({{\linewidth}}, {{{h}cm}});
+\end{{tikzpicture}}
+\end{{center}}
+""".lstrip()
+
+    if t == "coord":
+        # for now: same as grid fine (you can later add axes)
+        h = float(block.get("height_cm", 6.0))
+        return rf"""
+\begin{{center}}
+\begin{{tikzpicture}}
+  \draw[step=5mm, very thin] (0,0) grid ({{\linewidth}}, {{{h}cm}});
+  \draw[line width=0.4pt] (0,0) rectangle ({{\linewidth}}, {{{h}cm}});
+\end{{tikzpicture}}
+\end{{center}}
+""".lstrip()
+
     return ""
 
 def render_task(project_root: Path, task_dir: Path, task: Dict[str, Any], index: int) -> str:
@@ -363,16 +422,16 @@ def main() -> None:
     print(f"✅ Wrote TeX: {tex_path}")
 
     latexmk = which("latexmk")
-    pdflatex = which("pdflatex")
+    xelatex = which("xelatex")
 
     latexmk = which("latexmk")
-    pdflatex = which("pdflatex")
+    xelatex = which("xelatex")
 
-    # On Windows, latexmk often requires Perl; prefer pdflatex.
-    if pdflatex:
+    # On Windows, latexmk often requires Perl; prefer xelatex.
+    if xelatex:
         # run twice for references (simple approach)
         for _ in range(2):
-            cmd = ["pdflatex", "-interaction=nonstopmode", "-halt-on-error",
+            cmd = ["xelatex", "-interaction=nonstopmode", "-halt-on-error",
                    f"-output-directory={outdir.as_posix()}", tex_path.as_posix()]
             print("▶ Running:", " ".join(cmd))
             subprocess.run(cmd, check=True)
@@ -382,7 +441,7 @@ def main() -> None:
         print("▶ Running:", " ".join(cmd))
         subprocess.run(cmd, check=True)
     else:
-        raise RuntimeError("Neither latexmk nor pdflatex found in PATH. Install TeX Live/MiKTeX.")
+        raise RuntimeError("Neither latexmk nor xelatex found in PATH. Install TeX Live/MiKTeX.")
 
     if pdf_path.exists():
         print(f"🎉 PDF created: {pdf_path}")

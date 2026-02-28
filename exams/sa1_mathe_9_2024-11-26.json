@@ -10,7 +10,8 @@
   "date": "2024-11-26",
 
   "tasks": [
-    { "id": "lineare_funktionen_fehlerbilder_01" }
+    { "id": "lineare_funktionen_fehlerbilder_01" },
+	{ "id": "geraden_g1_punktprobe_parallel_01" }
   ],
 
   "version": "1.0"

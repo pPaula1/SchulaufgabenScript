@@ -6,6 +6,10 @@
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{fontspec}
+\defaultfontfeatures{Ligatures=TeX}
+\usepackage{tikz}
+\usetikzlibrary{calc}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
@@ -24,26 +28,85 @@
 
 \begin{document}
 
-\begin{tabular}{p{0.22\textwidth} p{0.76\textwidth}}
-  \includegraphics[width=\linewidth]{C:/Users/TKast/OneDrive/Dokumente/GitHub/SchulaufgabenScript/logos/krs.png} &
-  \renewcommand{\arraystretch}{1.3}
-  \begin{tabular}{|p{0.40\textwidth}|p{0.25\textwidth}|p{0.25\textwidth}|}
-    \hline
-    \textbf{1. Schulaufgabe} & Fach: Mathematik & Datum: 2024-11-26 \\ \hline
-    Name, Vorname: \linefield{7cm} & Klasse: \linefield{3cm} & Nr./Note: \linefield{3cm} \\ \hline
-    \multicolumn{3}{|l|}{Zeitzuschlag: \linefield{12cm}} \\ \hline
-    \multicolumn{3}{|l|}{Unterschrift Erziehungsberechtigte: \linefield{12cm}} \\ \hline
-    \multicolumn{3}{|l|}{LRSt \checkbox \quad IRSt \checkbox \quad ILSt \checkbox} \\ \hline
-  \end{tabular}
-\end{tabular}
+% ===== HEADER FRAME =====
+    \noindent
+    \setlength{\fboxsep}{8pt}   % Innenabstand im Rahmen
+    \setlength{\fboxrule}{0.8pt} % Rahmenstärke
 
-\vspace{8pt}
+    \fbox{%
+      \begin{minipage}[t]{\linewidth}
+        \renewcommand{\arraystretch}{1.25}
+        \begin{tabular}{@{}p{0.24\linewidth}@{\hspace{10pt}}|@{\hspace{10pt}}p{0.70\linewidth}@{}}
 
+          % --- LEFT: LOGO BOX ---
+          \begin{minipage}[c][3.4cm][c]{\linewidth}
+            \centering
+            \includegraphics[width=0.92\linewidth]{C:/Users/TKast/OneDrive/Dokumente/GitHub/SchulaufgabenScript/logos/krs.png}
+          \end{minipage}
+          &
+
+          % --- RIGHT: HEADER TABLE ---
+          \begin{minipage}[t]{\linewidth}
+            \renewcommand{\arraystretch}{1.25}
+            \begin{tabular}{|p{0.44\linewidth}|p{0.26\linewidth}|p{0.26\linewidth}|}
+              \hline
+              \textbf{1. Schulaufgabe} & Fach: Mathematik & Datum: 2024-11-26 \\ \hline
+          Name, Vorname: \linefield{7cm} & Klasse: \linefield{3cm} & Nr./Note: \linefield{3cm} \\ \hline
+          \multicolumn{3}{|l|}{Zeitzuschlag: \linefield{12cm}} \\ \hline
+          \multicolumn{3}{|l|}{Unterschrift Erziehungsberechtigte: \linefield{12cm}} \\ \hline
+          \multicolumn{3}{|l|}{LRSt \checkbox \quad IRSt \checkbox \quad ILSt \checkbox} \\ \hline
+            \end{tabular}
+          \end{minipage}
+
+        \end{tabular}
+      \end{minipage}
+    }
+
+    \vspace{10pt}
+    
 \tasktitle{Aufgabe 1: Fehlerbilder zu linearen Funktionen}{4.5}
 Verbinde jede Zeichnung mit der dazu passenden Beschreibung des Fehlers. Fehlt eine passende Beschreibung, formuliere sie im letzten Kasten.
 
 \begin{center}\includegraphics[width=\linewidth]{C:/Users/TKast/OneDrive/Dokumente/GitHub/SchulaufgabenScript/tasks/lineare_funktionen_fehlerbilder_01/images/layout.png}\end{center}
 
 
-\par\textbf{Gesamtpunkte:} 4.5\par
+\tasktitle{Aufgabe 2: Gerade g₁: Punktprobe, fehlende Koordinate, Nullstelle, Parallelität}{8.0}
+Gegeben ist die Gerade $g_1: y = -\frac{2}{3}x + 2$.
+
+\begin{enumerate}[label=\alph*)]
+\item Prüfe rechnerisch, ob der Punkt $P\,(-1{,}5\mid 3)$ auf der Geraden $g_1$ liegt.
+\begin{center}
+\begin{tikzpicture}
+  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {4.0cm});
+  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {4.0cm});
+\end{tikzpicture}
+\end{center}
+
+\item Der Punkt $B\,(x\mid \frac{1}{3})$ liegt auf der Geraden $g_1$. Berechne die fehlende Koordinate.
+\begin{center}
+\begin{tikzpicture}
+  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {4.0cm});
+  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {4.0cm});
+\end{tikzpicture}
+\end{center}
+
+\item Berechne die Nullstelle der Geraden $g_1$.
+\begin{center}
+\begin{tikzpicture}
+  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {4.0cm});
+  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {4.0cm});
+\end{tikzpicture}
+\end{center}
+
+\item Prüfe rechnerisch, ob die Gerade $g_2$ mit der Gleichung $x + \frac{1}{3}y - 2 = 0$ parallel zur Geraden $g_1$ verläuft.
+\begin{center}
+\begin{tikzpicture}
+  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {5.0cm});
+  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {5.0cm});
+\end{tikzpicture}
+\end{center}
+
+\end{enumerate}
+\vspace{6pt}\hrule\vspace{6pt}
+\par\textbf{Gesamtpunkte:} 12.5\par
 \end{document}
