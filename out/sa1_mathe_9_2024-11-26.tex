@@ -6,16 +6,21 @@
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{float}
+
+% Unicode friendly (XeLaTeX)
 \usepackage{fontspec}
 \defaultfontfeatures{Ligatures=TeX}
+
+% For checkbox symbol
+\usepackage{amssymb}
+\providecommand{\checkbox}{$\square$}
+
+% For grids
 \usepackage{tikz}
 \usetikzlibrary{calc}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
-
-% A simple checkbox
-\newcommand{\checkbox}{\(\square\)}
 
 % A line field
 \newcommand{\linefield}[1]{\rule{#1}{0.4pt}}
@@ -23,47 +28,160 @@
 % Task heading
 \newcommand{\tasktitle}[2]{\vspace{6pt}\textbf{#1}\hfill /#2\par\vspace{4pt}}
 
-\usepackage{amssymb}
-\providecommand{\checkbox}{$\square$}
-
 \begin{document}
 
-% ===== HEADER FRAME =====
-    \noindent
-    \setlength{\fboxsep}{8pt}   % Innenabstand im Rahmen
-    \setlength{\fboxrule}{0.8pt} % Rahmenstärke
+\def\SchoolLogo{C:/Users/TKast/OneDrive/Dokumente/GitHub/SchulaufgabenScript/logos/krs.png}
+\def\ExamTitle{1. Schulaufgabe}
+\def\ExamSubject{Mathematik}
+\def\ExamDate{2024-11-26}
+\def\ExamClass{9}
+\def\TotalPoints{12.5}
 
-    \fbox{%
-      \begin{minipage}[t]{\linewidth}
-        \renewcommand{\arraystretch}{1.25}
-        \begin{tabular}{@{}p{0.24\linewidth}@{\hspace{10pt}}|@{\hspace{10pt}}p{0.70\linewidth}@{}}
+% ==========================================
+% Schulaufgaben Header Template
+% (external file loaded by Python script)
+%
+% Expected variables:
+% \SchoolLogo
+% \ExamTitle
+% \ExamSubject
+% \ExamDate
+% \ExamClass
+% \TotalPoints
+% ==========================================
 
-          % --- LEFT: LOGO BOX ---
-          \begin{minipage}[c][3.4cm][c]{\linewidth}
-            \centering
-            \includegraphics[width=0.92\linewidth]{C:/Users/TKast/OneDrive/Dokumente/GitHub/SchulaufgabenScript/logos/krs.png}
-          \end{minipage}
-          &
+\newcommand{\cb}{$\square$}
 
-          % --- RIGHT: HEADER TABLE ---
-          \begin{minipage}[t]{\linewidth}
-            \renewcommand{\arraystretch}{1.25}
-            \begin{tabular}{|p{0.44\linewidth}|p{0.26\linewidth}|p{0.26\linewidth}|}
-              \hline
-              \textbf{1. Schulaufgabe} & Fach: Mathematik & Datum: 2024-11-26 \\ \hline
-          Name, Vorname: \linefield{7cm} & Klasse: \linefield{3cm} & Nr./Note: \linefield{3cm} \\ \hline
-          \multicolumn{3}{|l|}{Zeitzuschlag: \linefield{12cm}} \\ \hline
-          \multicolumn{3}{|l|}{Unterschrift Erziehungsberechtigte: \linefield{12cm}} \\ \hline
-          \multicolumn{3}{|l|}{LRSt \checkbox \quad IRSt \checkbox \quad ILSt \checkbox} \\ \hline
-            \end{tabular}
-          \end{minipage}
+\noindent
+\setlength{\fboxsep}{0pt}
+\setlength{\fboxrule}{0.9pt}
 
-        \end{tabular}
-      \end{minipage}
-    }
+\fbox{%
+\begin{minipage}{\linewidth}
+\renewcommand{\arraystretch}{1.15}
 
-    \vspace{10pt}
-    
+\begin{tabular}{@{}p{0.20\linewidth}@{}|@{}p{0.80\linewidth}@{}}
+
+% =================================================
+% LEFT SIDE (LOGO + CHECKBOXES)
+% =================================================
+\begin{minipage}[t]{\linewidth}
+\vspace{6pt}
+\centering
+\includegraphics[width=0.85\linewidth]{\SchoolLogo}
+
+\vspace{10pt}
+\hrule
+\vspace{10pt}
+
+\raggedright
+\hspace{10pt}\cb\ LRSt\par\vspace{6pt}
+\hspace{10pt}\cb\ IRSt\par\vspace{6pt}
+\hspace{10pt}\cb\ ILSt\par\vspace{10pt}
+
+\hspace{10pt}\cb\ \rule{2.3cm}{0.4pt}\par
+\vspace{8pt}
+
+\end{minipage}
+&
+% =================================================
+% RIGHT SIDE
+% =================================================
+\begin{minipage}[t]{\linewidth}
+
+% ---------- TITLE ROW ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.22\linewidth}|p{0.18\linewidth}|@{}}
+\hline
+\textbf{\ExamTitle} &
+\textbf{Fach}\par \ExamSubject &
+\textbf{Datum}\par \ExamDate \\
+\hline
+\end{tabularx}
+
+% ---------- NAME / CLASS / NOTE ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.16\linewidth}|p{0.16\linewidth}|p{0.16\linewidth}|@{}}
+\hline
+
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Name, Vorname}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+&
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Klasse}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+&
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Nr.}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+&
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Note}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+
+\\
+\hline
+\end{tabularx}
+
+% ---------- SIGNATURE ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.20\linewidth}|@{}}
+\hline
+
+\parbox[t][3.4cm][b]{\linewidth}{
+\textit{Unterschrift des/der Erziehungsberechtigten}
+
+\vspace{6pt}
+\rule{\linewidth}{0.4pt}
+}
+&
+\\
+\hline
+\end{tabularx}
+
+% ---------- TIME EXTENSION + POINTS ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.20\linewidth}|@{}}
+\hline
+
+\parbox[t][2.6cm][t]{\linewidth}{
+Zeitzuschlag in Anspruch genommen:\par\vspace{8pt}
+
+\cb\ ja \hspace{14pt}
+\cb\ nein \hspace{14pt}
+\cb\ teilweise
+
+\vspace{10pt}
+\rule{2.2cm}{0.4pt}\ Minuten
+}
+&
+\parbox[t][2.6cm][c]{\linewidth}{
+\centering
+\Large \underline{\hspace{1.5cm}}/\TotalPoints
+}
+
+\\
+\hline
+\end{tabularx}
+
+\end{minipage}
+\\
+\end{tabular}
+
+\end{minipage}
+}
+
+\vspace{12pt}
+
 \tasktitle{Aufgabe 1: Fehlerbilder zu linearen Funktionen}{4.5}
 Verbinde jede Zeichnung mit der dazu passenden Beschreibung des Fehlers. Fehlt eine passende Beschreibung, formuliere sie im letzten Kasten.
 
@@ -77,36 +195,35 @@ Gegeben ist die Gerade $g_1: y = -\frac{2}{3}x + 2$.
 \item Prüfe rechnerisch, ob der Punkt $P\,(-1{,}5\mid 3)$ auf der Geraden $g_1$ liegt.
 \begin{center}
 \begin{tikzpicture}
-  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {4.0cm});
-  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {4.0cm});
+  \draw[step=0.5cm, very thin] (0,0) grid (16.0cm, 4.0cm);
+  \draw[line width=0.4pt] (0,0) rectangle (16.0cm, 4.0cm);
 \end{tikzpicture}
 \end{center}
 
 \item Der Punkt $B\,(x\mid \frac{1}{3})$ liegt auf der Geraden $g_1$. Berechne die fehlende Koordinate.
 \begin{center}
 \begin{tikzpicture}
-  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {4.0cm});
-  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {4.0cm});
+  \draw[step=0.5cm, very thin] (0,0) grid (16.0cm, 4.0cm);
+  \draw[line width=0.4pt] (0,0) rectangle (16.0cm, 4.0cm);
 \end{tikzpicture}
 \end{center}
 
 \item Berechne die Nullstelle der Geraden $g_1$.
 \begin{center}
 \begin{tikzpicture}
-  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {4.0cm});
-  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {4.0cm});
+  \draw[step=0.5cm, very thin] (0,0) grid (16.0cm, 4.0cm);
+  \draw[line width=0.4pt] (0,0) rectangle (16.0cm, 4.0cm);
 \end{tikzpicture}
 \end{center}
 
 \item Prüfe rechnerisch, ob die Gerade $g_2$ mit der Gleichung $x + \frac{1}{3}y - 2 = 0$ parallel zur Geraden $g_1$ verläuft.
 \begin{center}
 \begin{tikzpicture}
-  \draw[step=5mm, very thin] (0,0) grid ({\linewidth}, {5.0cm});
-  \draw[line width=0.4pt] (0,0) rectangle ({\linewidth}, {5.0cm});
+  \draw[step=0.5cm, very thin] (0,0) grid (16.0cm, 5.0cm);
+  \draw[line width=0.4pt] (0,0) rectangle (16.0cm, 5.0cm);
 \end{tikzpicture}
 \end{center}
 
 \end{enumerate}
 \vspace{6pt}\hrule\vspace{6pt}
-\par\textbf{Gesamtpunkte:} 12.5\par
 \end{document}

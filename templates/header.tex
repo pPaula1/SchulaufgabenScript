@@ -1,0 +1,144 @@
+% ==========================================
+% Schulaufgaben Header Template
+% (external file loaded by Python script)
+%
+% Expected variables:
+% \SchoolLogo
+% \ExamTitle
+% \ExamSubject
+% \ExamDate
+% \ExamClass
+% \TotalPoints
+% ==========================================
+
+\newcommand{\cb}{$\square$}
+
+\noindent
+\setlength{\fboxsep}{0pt}
+\setlength{\fboxrule}{0.9pt}
+
+\fbox{%
+\begin{minipage}{\linewidth}
+\renewcommand{\arraystretch}{1.15}
+
+\begin{tabular}{@{}p{0.20\linewidth}@{}|@{}p{0.80\linewidth}@{}}
+
+% =================================================
+% LEFT SIDE (LOGO + CHECKBOXES)
+% =================================================
+\begin{minipage}[t]{\linewidth}
+\vspace{6pt}
+\centering
+\includegraphics[width=0.85\linewidth]{\SchoolLogo}
+
+\vspace{10pt}
+\hrule
+\vspace{10pt}
+
+\raggedright
+\hspace{10pt}\cb\ LRSt\par\vspace{6pt}
+\hspace{10pt}\cb\ IRSt\par\vspace{6pt}
+\hspace{10pt}\cb\ ILSt\par\vspace{10pt}
+
+\hspace{10pt}\cb\ \rule{2.3cm}{0.4pt}\par
+\vspace{8pt}
+
+\end{minipage}
+&
+% =================================================
+% RIGHT SIDE
+% =================================================
+\begin{minipage}[t]{\linewidth}
+
+% ---------- TITLE ROW ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.22\linewidth}|p{0.18\linewidth}|@{}}
+\hline
+\textbf{\ExamTitle} &
+\textbf{Fach}\par \ExamSubject &
+\textbf{Datum}\par \ExamDate \\
+\hline
+\end{tabularx}
+
+% ---------- NAME / CLASS / NOTE ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.16\linewidth}|p{0.16\linewidth}|p{0.16\linewidth}|@{}}
+\hline
+
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Name, Vorname}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+&
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Klasse}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+&
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Nr.}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+&
+\parbox[t][3.4cm][t]{\linewidth}{
+\textbf{Note}
+
+\vfill
+\rule{\linewidth}{0.4pt}
+}
+
+\\
+\hline
+\end{tabularx}
+
+% ---------- SIGNATURE ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.20\linewidth}|@{}}
+\hline
+
+\parbox[t][3.4cm][b]{\linewidth}{
+\textit{Unterschrift des/der Erziehungsberechtigten}
+
+\vspace{6pt}
+\rule{\linewidth}{0.4pt}
+}
+&
+\\
+\hline
+\end{tabularx}
+
+% ---------- TIME EXTENSION + POINTS ----------
+\begin{tabularx}{\linewidth}{@{}|X|p{0.20\linewidth}|@{}}
+\hline
+
+\parbox[t][2.6cm][t]{\linewidth}{
+Zeitzuschlag in Anspruch genommen:\par\vspace{8pt}
+
+\cb\ ja \hspace{14pt}
+\cb\ nein \hspace{14pt}
+\cb\ teilweise
+
+\vspace{10pt}
+\rule{2.2cm}{0.4pt}\ Minuten
+}
+&
+\parbox[t][2.6cm][c]{\linewidth}{
+\centering
+\Large \underline{\hspace{1.5cm}}/\TotalPoints
+}
+
+\\
+\hline
+\end{tabularx}
+
+\end{minipage}
+\\
+\end{tabular}
+
+\end{minipage}
+}
+
+\vspace{12pt}

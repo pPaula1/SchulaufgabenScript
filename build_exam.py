@@ -3,9 +3,8 @@ import argparse
 import json
 import subprocess
 import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # Optional validation
 try:
@@ -27,10 +26,10 @@ def validate_json(instance: Dict[str, Any], schema_path: Path, label: str) -> No
         return
     schema = read_json(schema_path)
     v = Draft202012Validator(schema)
-    errors = sorted(v.iter_errors(instance), key=lambda e: e.path)
+    errors = sorted(v.iter_errors(instance), key=lambda e: list(e.path))
     if errors:
         print(f"\n❌ Validation failed for {label}: {schema_path.name}")
-        for e in errors[:20]:
+        for e in errors[:30]:
             loc = ".".join([str(x) for x in e.path]) or "<root>"
             print(f" - {loc}: {e.message}")
         raise SystemExit(2)
@@ -40,12 +39,6 @@ def which(cmd: str) -> Optional[str]:
     return _which(cmd)
 
 def resolve_asset_path(project_root: Path, base_dir: Path, p: str) -> Path:
-    """
-    Resolve asset paths robustly:
-    - If p is absolute: use it
-    - Else try project_root / p
-    - Else try base_dir / p
-    """
     cand = Path(p)
     if cand.is_absolute():
         return cand
@@ -55,12 +48,8 @@ def resolve_asset_path(project_root: Path, base_dir: Path, p: str) -> Path:
     bd = base_dir / cand
     return bd
 
-def tex_escape_minimal(s: str) -> str:
-    """
-    We assume most text is LaTeX-safe already (because you embed math etc.).
-    So we do NOT hard-escape everything.
-    This only normalizes Windows newlines and ensures it’s a str.
-    """
+def tex_escape_minimal(s: Any) -> str:
+    # We assume most strings are already LaTeX-safe (math etc.)
     return str(s).replace("\r\n", "\n")
 
 
@@ -69,6 +58,7 @@ def tex_escape_minimal(s: str) -> str:
 # -------------------------
 
 def latex_preamble() -> str:
+    # XeLaTeX-friendly preamble (works with pdflatex too, but fontspec needs XeLaTeX/LuaLaTeX)
     return r"""
 \documentclass[12pt,a4paper]{article}
 \usepackage[margin=2cm]{geometry}
@@ -78,16 +68,21 @@ def latex_preamble() -> str:
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{float}
+
+% Unicode friendly (XeLaTeX)
 \usepackage{fontspec}
 \defaultfontfeatures{Ligatures=TeX}
+
+% For checkbox symbol
+\usepackage{amssymb}
+\providecommand{\checkbox}{$\square$}
+
+% For grids
 \usepackage{tikz}
 \usetikzlibrary{calc}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
-
-% A simple checkbox
-\newcommand{\checkbox}{\(\square\)}
 
 % A line field
 \newcommand{\linefield}[1]{\rule{#1}{0.4pt}}
@@ -95,121 +90,51 @@ def latex_preamble() -> str:
 % Task heading
 \newcommand{\tasktitle}[2]{\vspace{6pt}\textbf{#1}\hfill /#2\par\vspace{4pt}}
 
-\usepackage{amssymb}
-\providecommand{\checkbox}{$\square$}
-
 \begin{document}
 """.lstrip()
 
 def latex_end() -> str:
     return r"\end{document}"
 
-def render_header(project_root: Path, exam: Dict[str, Any], school: Dict[str, Any]) -> str:
-    # Resolve logo path
-    school_file_dir = None  # will be passed by caller if needed, but keep simple
-    logo_path = resolve_asset_path(project_root, project_root, school["logo"])
+
+def render_header_template(
+    project_root: Path,
+    school_base_dir: Path,
+    exam: Dict[str, Any],
+    school: Dict[str, Any],
+    total_points: float,
+) -> str:
+    header_path = project_root / "templates" / "header.tex"
+    if not header_path.exists():
+        raise FileNotFoundError(f"Header template not found: {header_path}")
+
+    header = header_path.read_text(encoding="utf-8")
+
+    logo_path = resolve_asset_path(project_root, school_base_dir, school["logo"])
     if not logo_path.exists():
         raise FileNotFoundError(f"School logo not found: {logo_path}")
 
-    title = tex_escape_minimal(exam["title"])
-    subject = tex_escape_minimal(exam["subject"])
-    clazz = tex_escape_minimal(exam["class"])
-    date = tex_escape_minimal(exam["date"])
+    # Make points pretty
+    tp = int(total_points) if float(total_points).is_integer() else total_points
 
-    # Header fields from school.json
-    fields = school.get("header_fields", [])
+    defs = "\n".join([
+        rf"\def\SchoolLogo{{{logo_path.as_posix()}}}",
+        rf"\def\ExamTitle{{{tex_escape_minimal(exam['title'])}}}",
+        rf"\def\ExamSubject{{{tex_escape_minimal(exam['subject'])}}}",
+        rf"\def\ExamDate{{{tex_escape_minimal(exam['date'])}}}",
+        rf"\def\ExamClass{{{tex_escape_minimal(exam['class'])}}}",
+        rf"\def\TotalPoints{{{tp}}}",
+    ])
 
-    # We render a simple table like:
-    # [Logo] [Title | Subject | Date]
-    #       [Name line | Class | Note]
-    #       [Parents signature line]
-    #       [Checkbox group LRSt IRSt ILSt]
-    #
-    # This is intentionally "no fancy layout settings", just generic rendering.
-    rows: List[str] = []
+    return defs + "\n\n" + header + "\n"
 
-    # First fixed row: title/subject/date
-    rows.append(rf"\textbf{{{title}}} & Fach: {subject} & Datum: {date} \\ \hline")
-
-    # Then render school header_fields in a generic way.
-    # We will place "student_name", "class", "note" into one row if present.
-    def find_field(key: str) -> Optional[Dict[str, Any]]:
-        for f in fields:
-            if f.get("key") == key:
-                return f
-        return None
-
-    student = find_field("student_name")
-    cls_f = find_field("class")
-    note = find_field("note")
-
-    if student or cls_f or note:
-        student_label = student["label"] if student else "Name"
-        cls_label = cls_f["label"] if cls_f else "Klasse"
-        note_label = note["label"] if note else "Nr./Note"
-        rows.append(
-            rf"{student_label}: \linefield{{7cm}} & {cls_label}: \linefield{{3cm}} & {note_label}: \linefield{{3cm}} \\ \hline"
-        )
-
-    # Remaining text_line fields (excluding the three above) each get full-width row
-    skip = {"student_name", "class", "note"}
-    for f in fields:
-        if f.get("kind") == "text_line" and f.get("key") not in skip:
-            label = tex_escape_minimal(f.get("label", f.get("key", "")))
-            rows.append(rf"\multicolumn{{3}}{{|l|}}{{{label}: \linefield{{12cm}}}} \\ \hline")
-
-    # Checkbox groups
-    for f in fields:
-        if f.get("kind") == "checkbox_group":
-            opts = f.get("options", [])
-            label = tex_escape_minimal(f.get("label", ""))
-            if label.strip():
-                prefix = label + " "
-            else:
-                prefix = ""
-            boxes = " \quad ".join([rf"{tex_escape_minimal(o)} {r'\checkbox'}" for o in opts])
-            rows.append(rf"\multicolumn{{3}}{{|l|}}{{{prefix}{boxes}}} \\ \hline")
-
-    header = rf"""
-    % ===== HEADER FRAME =====
-    \noindent
-    \setlength{{\fboxsep}}{{8pt}}   % Innenabstand im Rahmen
-    \setlength{{\fboxrule}}{{0.8pt}} % Rahmenstärke
-
-    \fbox{{%
-      \begin{{minipage}}[t]{{\linewidth}}
-        \renewcommand{{\arraystretch}}{{1.25}}
-        \begin{{tabular}}{{@{{}}p{{0.24\linewidth}}@{{\hspace{{10pt}}}}|@{{\hspace{{10pt}}}}p{{0.70\linewidth}}@{{}}}}
-
-          % --- LEFT: LOGO BOX ---
-          \begin{{minipage}}[c][3.4cm][c]{{\linewidth}}
-            \centering
-            \includegraphics[width=0.92\linewidth]{{{logo_path.as_posix()}}}
-          \end{{minipage}}
-          &
-
-          % --- RIGHT: HEADER TABLE ---
-          \begin{{minipage}}[t]{{\linewidth}}
-            \renewcommand{{\arraystretch}}{{1.25}}
-            \begin{{tabular}}{{|p{{0.44\linewidth}}|p{{0.26\linewidth}}|p{{0.26\linewidth}}|}}
-              \hline
-              {("\n          ".join(rows))}
-            \end{{tabular}}
-          \end{{minipage}}
-
-        \end{{tabular}}
-      \end{{minipage}}
-    }}
-
-    \vspace{{10pt}}
-    """.lstrip()
-    return header
 
 def render_workspace_block(block: Dict[str, Any]) -> str:
     t = block["type"]
 
     if t == "lines":
         n = int(block["lines"])
+        # simple writing lines
         lines = "\n".join([r"\linefield{16cm}\\[6pt]" for _ in range(n)])
         return lines + "\n"
 
@@ -220,47 +145,51 @@ def render_workspace_block(block: Dict[str, Any]) -> str:
     if t == "box":
         h = float(block["height_cm"])
         title = tex_escape_minimal(block.get("box_title", ""))
-        if title:
+        if title.strip():
             return rf"\textbf{{{title}}}\par\vspace{{2pt}}\fbox{{\parbox[t][{h}cm][t]{{\linewidth}}{{}}}}\n"
         return rf"\fbox{{\parbox[t][{h}cm][t]{{\linewidth}}{{}}}}\n"
 
     if t == "grid":
+        # IMPORTANT: TikZ cannot use \linewidth as a coordinate length directly.
+        # We draw using a fixed width that matches typical text width (~16cm with 2cm margins).
+        # Adjust GRID_WIDTH_CM if you change margins.
+        GRID_WIDTH_CM = 16.0
+
         h = float(block.get("height_cm", 4.0))
         grid = block.get("grid", "karo_5mm")
 
-        # step size
         if grid == "karo_5mm":
-            step = "5mm"
+            step = "0.5cm"
         elif grid == "karo_1cm":
             step = "1cm"
         elif grid == "millimeter":
-            step = "1mm"
+            step = "0.1cm"
         else:
-            step = "5mm"
+            step = "0.5cm"
 
-        # draw grid with border, width = \linewidth
         return rf"""
 \begin{{center}}
 \begin{{tikzpicture}}
-  \draw[step={step}, very thin] (0,0) grid ({{\linewidth}}, {{{h}cm}});
-  \draw[line width=0.4pt] (0,0) rectangle ({{\linewidth}}, {{{h}cm}});
+  \draw[step={step}, very thin] (0,0) grid ({GRID_WIDTH_CM}cm, {h}cm);
+  \draw[line width=0.4pt] (0,0) rectangle ({GRID_WIDTH_CM}cm, {h}cm);
 \end{{tikzpicture}}
 \end{{center}}
 """.lstrip()
 
     if t == "coord":
-        # for now: same as grid fine (you can later add axes)
+        GRID_WIDTH_CM = 16.0
         h = float(block.get("height_cm", 6.0))
         return rf"""
 \begin{{center}}
 \begin{{tikzpicture}}
-  \draw[step=5mm, very thin] (0,0) grid ({{\linewidth}}, {{{h}cm}});
-  \draw[line width=0.4pt] (0,0) rectangle ({{\linewidth}}, {{{h}cm}});
+  \draw[step=0.5cm, very thin] (0,0) grid ({GRID_WIDTH_CM}cm, {h}cm);
+  \draw[line width=0.4pt] (0,0) rectangle ({GRID_WIDTH_CM}cm, {h}cm);
 \end{{tikzpicture}}
 \end{{center}}
 """.lstrip()
 
     return ""
+
 
 def render_task(project_root: Path, task_dir: Path, task: Dict[str, Any], index: int) -> str:
     name = tex_escape_minimal(task["name"])
@@ -275,7 +204,7 @@ def render_task(project_root: Path, task_dir: Path, task: Dict[str, Any], index:
     assets = task.get("assets", [])
     workspace = task.get("workspace", [])
 
-    # Layout mode: include the layout image big
+    # Layout mode: include a layout image big
     if mode == "layout":
         layout_asset = None
         for a in assets:
@@ -297,7 +226,7 @@ def render_task(project_root: Path, task_dir: Path, task: Dict[str, Any], index:
         out.append("\n")
         return "\n".join(out)
 
-    # Text mode: render figure assets (role=figure) below statement
+    # Text mode: render figure assets
     for a in assets:
         if a.get("role", "figure") != "figure":
             continue
@@ -307,7 +236,9 @@ def render_task(project_root: Path, task_dir: Path, task: Dict[str, Any], index:
         width = a.get("width", r"0.8\linewidth")
         cap = a.get("caption")
         if cap:
-            out.append(rf"\begin{{figure}}[H]\centering\includegraphics[width={width}]{{{p.as_posix()}}}\caption{{{tex_escape_minimal(cap)}}}\end{{figure}}")
+            out.append(
+                rf"\begin{{figure}}[H]\centering\includegraphics[width={width}]{{{p.as_posix()}}}\caption{{{tex_escape_minimal(cap)}}}\end{{figure}}"
+            )
         else:
             out.append(rf"\begin{{center}}\includegraphics[width={width}]{{{p.as_posix()}}}\end{{center}}")
 
@@ -317,7 +248,6 @@ def render_task(project_root: Path, task_dir: Path, task: Dict[str, Any], index:
         out.append(r"\begin{enumerate}[label=\alph*)]")
         for part in parts:
             out.append(r"\item " + tex_escape_minimal(part["text"]))
-            # per-part workspace
             for wb in part.get("workspace", []):
                 out.append(render_workspace_block(wb))
         out.append(r"\end{enumerate}")
@@ -355,51 +285,48 @@ def main() -> None:
     school_schema = schemas_dir / "school.schema.json"
     exam_schema = schemas_dir / "exam.schema.json"
 
-    # Validate exam if schema exists and jsonschema installed
     if not args.no_validate and HAS_JSONSCHEMA and exam_schema.exists():
         validate_json(exam, exam_schema, f"exam ({exam_path.name})")
 
     # Load school
     school_id = exam["school_id"]
-    school_path = next(
-        (project_root / "schools").glob(f"**/{school_id}.json"),
-        None
-    )
+    school_path = next((project_root / "schools").glob(f"**/{school_id}.json"), None)
+    if school_path is None or not school_path.exists():
+        raise FileNotFoundError(f"School file not found for id '{school_id}' inside schools/")
 
-    if school_path is None:
-        raise FileNotFoundError(
-            f"School file not found for id '{school_id}' inside schools/"
-        )
-    if not school_path.exists():
-        raise FileNotFoundError(f"School file not found: {school_path}")
     school = read_json(school_path)
-
     if not args.no_validate and HAS_JSONSCHEMA and school_schema.exists():
         validate_json(school, school_schema, f"school ({school_path.name})")
+
+    school_base_dir = school_path.parent
+
+    # Precompute total points (so header can show it)
+    total_points = 0.0
+    for tref in exam["tasks"]:
+        task_id = tref["id"]
+        task_path = project_root / "tasks" / task_id / "task.json"
+        if not task_path.exists():
+            raise FileNotFoundError(f"Task JSON not found: {task_path}")
+        task = read_json(task_path)
+        pts = float(tref.get("points_override", task["points"]))
+        total_points += pts
 
     # Build LaTeX
     tex_parts: List[str] = []
     tex_parts.append(latex_preamble())
-    tex_parts.append(render_header(project_root, exam, school))
+    tex_parts.append(render_header_template(project_root, school_base_dir, exam, school, total_points))
 
-    # Load and render tasks
-    total_points = 0.0
+    # Render tasks
     for i, tref in enumerate(exam["tasks"], start=1):
         task_id = tref["id"]
         task_dir = project_root / "tasks" / task_id
         task_path = task_dir / "task.json"
-        if not task_path.exists():
-            raise FileNotFoundError(f"Task JSON not found: {task_path}")
-
         task = read_json(task_path)
 
         if not args.no_validate and HAS_JSONSCHEMA and task_schema.exists():
             validate_json(task, task_schema, f"task ({task_id})")
 
         pts = float(tref.get("points_override", task["points"]))
-        total_points += pts
-
-        # If override, apply to render output
         task_for_render = dict(task)
         task_for_render["points"] = pts
 
@@ -408,41 +335,31 @@ def main() -> None:
 
         tex_parts.append(render_task(project_root, task_dir, task_for_render, i))
 
-    # Total points line at end (optional)
-    tex_parts.append(rf"\par\textbf{{Gesamtpunkte:}} {total_points}\par")
-
     tex_parts.append(latex_end())
 
     exam_id = exam["id"]
     tex_path = outdir / f"{exam_id}.tex"
     tex_path.write_text("\n".join(tex_parts), encoding="utf-8")
-
-    # Compile
-    pdf_path = outdir / f"{exam_id}.pdf"
     print(f"✅ Wrote TeX: {tex_path}")
 
-    latexmk = which("latexmk")
-    xelatex = which("xelatex")
+    # Compile (prefer xelatex for Unicode)
+    compiler = which("xelatex") or which("pdflatex")
+    if compiler is None:
+        raise RuntimeError("Neither xelatex nor pdflatex found in PATH. Install MiKTeX/TeX Live and add to PATH.")
 
-    latexmk = which("latexmk")
-    xelatex = which("xelatex")
-
-    # On Windows, latexmk often requires Perl; prefer xelatex.
-    if xelatex:
-        # run twice for references (simple approach)
-        for _ in range(2):
-            cmd = ["xelatex", "-interaction=nonstopmode", "-halt-on-error",
-                   f"-output-directory={outdir.as_posix()}", tex_path.as_posix()]
-            print("▶ Running:", " ".join(cmd))
-            subprocess.run(cmd, check=True)
-    elif latexmk:
-        cmd = ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error",
-               f"-outdir={outdir.as_posix()}", tex_path.as_posix()]
+    # Run twice for references
+    for _ in range(2):
+        cmd = [
+            compiler,
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            f"-output-directory={outdir.as_posix()}",
+            tex_path.as_posix(),
+        ]
         print("▶ Running:", " ".join(cmd))
         subprocess.run(cmd, check=True)
-    else:
-        raise RuntimeError("Neither latexmk nor xelatex found in PATH. Install TeX Live/MiKTeX.")
 
+    pdf_path = outdir / f"{exam_id}.pdf"
     if pdf_path.exists():
         print(f"🎉 PDF created: {pdf_path}")
     else:
